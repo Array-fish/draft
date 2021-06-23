@@ -1,3 +1,5 @@
 *.csv
 *.pptx
 constant.py
+parameter.py
+test_deck
