@@ -13,7 +13,7 @@ class Card_detail_frame(ttk.Frame):
         self.img_label.columnconfigure(0,weight=1)
         self.img_label.rowconfigure(0,weight=1)
         # text_label
-        self.detail_label = ttk.Label(self,textvariable=self.card_detail)
+        self.detail_label = ttk.Label(self,textvariable=self.card_detail,wraplength=177)
         self.detail_label.grid(column =0,row=1,sticky=(N,S,E,W))
         self.detail_label.columnconfigure(0,weight=1)
         self.detail_label.rowconfigure(0,weight=1)

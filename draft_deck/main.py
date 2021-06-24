@@ -24,7 +24,7 @@ def main():
     card_detail_controller = Card_detail_controller(drafter,card_detail_frame)
     card_choice_frame = Card_choice_frame(root,drafter,card_detail_controller)
     card_choice_frame.grid(column=1,row=0)
-    deck_list_frame = Deck_list_frame(root,drafter)
+    deck_list_frame = Deck_list_frame(root,drafter,card_detail_controller)
     deck_list_frame.grid(column=2,row=0)
     #print_hierarchy(root)
     root.mainloop()

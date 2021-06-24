@@ -65,7 +65,7 @@ class Drafter():
 
     # pack_cnt is 1-index
     def get_new_pack_id(self,pack_cnt):
-        new_pack_id = self.packs[(pack_cnt-1) * 2:pack_cnt * 2] # deepcopy?
+        new_pack_id = self.packs[(pack_cnt-1) * 2:pack_cnt * 2]
         return new_pack_id
     
     def read_card_pool(self):
