@@ -24,5 +24,6 @@ class Deck_list_frame(ttk.Frame):
         self.drafter.set_cards_var(self.cards_var)
 
     def show_detail(self):
-        selected_id = self.drafter.deck[self.curselection()[0]]
-        self.detail_controller.update_card_display(selected_id)
+        if self.cards_var.get() != "":
+            selected_id = self.drafter.deck[self.deck_list_box.curselection()[0]]
+            self.detail_controller.update_card_display(selected_id)

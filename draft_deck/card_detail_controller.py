@@ -18,6 +18,11 @@ class Card_detail_controller():
             tmp_explain_text += card_data_dict["race"][0]+"/"+card_data_dict["attribute"][0]+"\n"
             tmp_explain_text += "[★"+str(card_data_dict["level"][0])+"]"+str(card_data_dict["atk"][0])+"/"+str(card_data_dict["def"][0])
         tmp_explain_text += "\n"
+        if card_data_dict["setcode"]:
+            tmp_explain_text += "カテゴリー: "
+            for category in card_data_dict["setcode"]:
+                tmp_explain_text += category + " / "
+            tmp_explain_text += "\n"
         tmp_explain_text += card_data_dict["text"][0]
         self.card_detail_frame.card_detail.set(tmp_explain_text)
 

@@ -494,7 +494,7 @@ type_list = [
 ]
 
 race_list =[
-    ["全種",0x1ffffff],
+    #["全種",0x1ffffff],
     ["戦士",0x1],
     ["魔法使い",0x2],
     ["天使",0x4],
@@ -534,8 +534,7 @@ attribute_list=[
 def parse_setcode(setcode):
     rtn_setcode_list = list()
     for sl in setcode_list:
-        
-        if (setcode & sl[0]) > 0:
+        if setcode == (sl[0] % 0x1000):
             rtn_setcode_list.append(sl[1])
     return rtn_setcode_list
 
@@ -563,7 +562,7 @@ def parse_attribute(attribute):
 
 def parse_card_data(card_df):
     parsed_data=dict()
-    #parsed_data["set_code"] = parse_set_code(card_df["set_code"])
+    parsed_data["setcode"] = parse_setcode(card_df["setcode"].values)
     parsed_data["type"]  = parse_type(card_df["type"].values)
     parsed_data["race"] = parse_race(card_df["race"].values)
     parsed_data["attribute"] = parse_attribute(card_df["attribute"].values)

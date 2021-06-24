@@ -129,7 +129,7 @@ class Drafter():
 # deck_dict = {"main":list(id),"extra":list(id)}
 ###
 def deck_format(deck_dict,deck_dir):
-    print(deck_dict)
+    #print(deck_dict)
     os.makedirs(deck_dir, exist_ok=True) 
     deck_name = input("Please input deck name:")
     with open(os.path.join(deck_dir,deck_name+".ydk"),mode="w", encoding="utf-8") as f:

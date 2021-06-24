@@ -5,7 +5,7 @@ class Card_Label(ttk.Label):
     def __init__(self,master,bind_func,**arg):
         super().__init__(master,**arg)
         self.id = 0
-        self.bind("<ButtonPress-3>",lambda e:bind_func(self.id))
+        self.bind("<ButtonPress-1>",lambda e:bind_func(self.id))
 
 class Pack_display_frame(ttk.Frame):
     def __init__(self,master,detail_controller):
@@ -28,7 +28,6 @@ class Pack_display_frame(ttk.Frame):
             new_label.columnconfigure(0,weight=1)
             new_label.rowconfigure(0,weight = 1)
             new_label.id = self.id_list[i]
-            #new_label.bind("<ButtonPress-3>",lambda e:self.detail_controller.update_card_display(new_label.id))
             self.card_label_list.append(new_label)
 
 class Card_choice_frame(ttk.Frame):
@@ -43,7 +42,7 @@ class Card_choice_frame(ttk.Frame):
         self.pack_cnt = 1
         self.pack_progress.set(str(self.pack_cnt)+" / 15 pack")
         self.pack_cnt_label = ttk.Label(self,textvariable=self.pack_progress)
-        self.pack_cnt_label.grid(column=0,row=0)
+        self.pack_cnt_label.grid(column=0,row=0,columnspan=5)
         # pack choice radio buttons
         self.which_pack = StringVar()
         self.upper_radio_button = ttk.Radiobutton(self,variable=self.which_pack,value="upper")
@@ -83,8 +82,9 @@ class Card_choice_frame(ttk.Frame):
         else :
             self.drafter.add_deck(self.cards_id_lower)
         if self.pack_cnt == 15:
-            self.pack_progress.set("deck creating...")
+            self.pack_progress.set("deck creating... please fill in deck name")
             self.drafter.create_deck()
+            self.master.destroy()
         else:
             self.pack_cnt += 1
             new_pack_img_list = self.drafter.get_new_pack_img(self.pack_cnt)
