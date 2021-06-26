@@ -117,21 +117,20 @@ class Drafter():
                         del extra_list[0]
         return packs_list
 
-    def create_deck(self):
+    def create_deck(self,deck_name):
         deck_dict = {"main":list(), "extra":list()}
         for id in self.deck:
             if self.extra_check(id):
                 deck_dict["extra"].append(str(id))
             else :
                 deck_dict["main"].append(str(id))
-        deck_format(deck_dict,self.deck_dir)
+        deck_format(deck_dict,self.deck_dir,deck_name)
 ###d
 # deck_dict = {"main":list(id),"extra":list(id)}
 ###
-def deck_format(deck_dict,deck_dir):
+def deck_format(deck_dict,deck_dir,deck_name):
     #print(deck_dict)
     os.makedirs(deck_dir, exist_ok=True) 
-    deck_name = input("Please input deck name:")
     with open(os.path.join(deck_dir,deck_name+".ydk"),mode="w", encoding="utf-8") as f:
         f.write("#created by ...\n")
         f.write("#main\n")

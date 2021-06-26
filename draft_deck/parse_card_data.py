@@ -1,4 +1,3 @@
-
 # from constant import
 
 setcode_list = [

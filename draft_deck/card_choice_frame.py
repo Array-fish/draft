@@ -1,7 +1,26 @@
 #from draft_deck.drafter import Drafter
-from tkinter import StringVar, ttk
+from tkinter import StringVar, ttk,N,S,W,E
+
+class Name_form_frame(ttk.Frame):
+    def __init__(self,master,drafter):
+        super().__init__(master)
+        self.drafter = drafter
+        self.text = ttk.Label(self,text = "Please fill in deck name:").grid(column=0,row=0)
+        self.name_value = StringVar()
+        self.name_form = ttk.Entry(self,textvariable=self.name_value).grid(column=0,row=1)
+        self.butotn = ttk.Button(self,text="OK",command=self.create_deck).grid(column=0,row=2)
+
+    def create_deck(self):
+        deck_name = self.name_value.get()
+        if deck_name == "":
+            return
+        else:
+            self.drafter.create_deck(deck_name)
+            self.master.destroy()
+
 
 class Card_Label(ttk.Label):
+    ''' ttk.Label for Card img. This have id and fuction fired by left click.'''
     def __init__(self,master,bind_func,**arg):
         super().__init__(master,**arg)
         self.id = 0
@@ -82,9 +101,10 @@ class Card_choice_frame(ttk.Frame):
         else :
             self.drafter.add_deck(self.cards_id_lower)
         if self.pack_cnt == 15:
-            self.pack_progress.set("deck creating... please fill in deck name")
-            self.drafter.create_deck()
-            self.master.destroy()
+            self.pack_progress.set("deck creating...")
+            name_form = Name_form_frame(self.master,self.drafter)
+            name_form.grid(column=0,row=0,sticky=(N,S,W,E))
+            
         else:
             self.pack_cnt += 1
             new_pack_img_list = self.drafter.get_new_pack_img(self.pack_cnt)
