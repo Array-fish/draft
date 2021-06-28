@@ -901,14 +901,14 @@ python-versions = "*"
 name = "websocket-client"
 version = "1.1.0"
 description = "WebSocket client for Python with low level API options"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "5c56c9b517e097cb433d2d3e6bc40a278ea4842e570faaa5469845672443402e"
+content-hash = "64eb3e938020c6887cdb76a3b1db41b4c65f9a8814a29eb7fa04933aaa32c81d"
 
 [metadata.files]
 anyio = [

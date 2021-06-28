@@ -8,6 +8,7 @@ authors = ["array_fish <uekusa_hideaki@yahoo.co.jp>"]
 python = "^3.9"
 Pillow = "^8.2.0"
 pandas = "^1.2.4"
+websocket-client = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
