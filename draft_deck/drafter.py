@@ -5,11 +5,9 @@ from parse_card_data import parse_card_data, check_extra
 import sqlite3
 import pandas as pd
 from PIL import ImageTk, Image
-import math
-import numpy as np
 
 
-class Drafter():
+class Drafter:
     def __init__(self, img_dir, db_file, pool_file, deck_dir):
         self.deck = list()
         self.deck_name = list()
@@ -18,6 +16,7 @@ class Drafter():
         self.pool_file = pool_file
         self.deck_dir = deck_dir
         self.cards_var = 0
+        self.is_my_turn = False
         self.packs = self.pack_create(self.read_card_pool())
         con = sqlite3.connect(db_file)
         cur = con.cursor()
@@ -25,6 +24,15 @@ class Drafter():
         self.texts_df = pd.read_sql("SELECT * FROM texts", con)
         cur.close()
         con.close()
+
+    def create_room(self):
+        # post key to create_room
+        # get response get room id check player id
+        # post pack_id
+
+    def enter_room(self):
+        # post id and key to check can enter the room
+        # if there is not room, return error.
 
     def get_card_data(self, card_id):
         card_df = self.datas_df[self.datas_df["id"] == card_id]
@@ -36,8 +44,8 @@ class Drafter():
         card_dict["name"] = self.texts_df[self.texts_df['id'] == card_id]["name"].values
         return card_dict
 
-    def get_card_img(self, card_id):
-        img = ImageTk.PhotoImage(Image.open(os.path.join(self.img_dir, str(int(card_id))) + ".jpg").resize((177, 254)))
+    def get_card_img(self, card_id, img_size=(177, 254)):
+        img = ImageTk.PhotoImage(Image.open(os.path.join(self.img_dir, str(int(card_id))) + ".jpg").resize(img_size))
         return img
 
     def extra_check(self, card_id):
@@ -83,40 +91,27 @@ class Drafter():
                     card_pool_dict[atype].append(card_id)
         return card_pool_dict
 
-    # monstar:magic:trap:extra:rare = 10:3:3:3:1
-    # create 4x15x2 packs
-    def pack_create(self, card_pool_dict):
-        monster_list = random.choices(card_pool_dict["monstar"], k=60)
-        magic_list = random.choices(card_pool_dict["magic"], k=18)
-        trap_list = random.choices(card_pool_dict["trap"], k=18)
-        extra_list = random.choices(card_pool_dict["extra"], k=18)
-        rare_list = random.choices(card_pool_dict["rare"], k=6)
+    def pack_create(self, card_pool_dict, member_num):
+        """
+        monstar:magic:trap:extra:rare = 10:3:3:3:1
+        create 20x3xmember packs
+        """
+        monster_list = random.choices(card_pool_dict["monster"], k=30*member_num)
+        magic_list = random.choices(card_pool_dict["magic"], k=9*member_num)
+        trap_list = random.choices(card_pool_dict["trap"], k=9*member_num)
+        extra_list = random.choices(card_pool_dict["extra"], k=9*member_num)
+        rare_list = random.choices(card_pool_dict["rare"], k=3*member_num)
         main_list = monster_list + magic_list + trap_list
 
         random.shuffle(main_list)
         random.shuffle(extra_list)
         random.shuffle(rare_list)
         packs_list = list()
-        for i in range(15):
-            if i < 3:
-                packs_list.append(main_list[0:4])
-                packs_list.append(main_list[4:8])
-                del main_list[0:8]
-            else:
-                if i % 5 == 4:
-                    for _ in range(2):
-                        tmp_list = main_list[0:3]
-                        tmp_list.append(rare_list[0])
-                        packs_list.append(tmp_list)
-                        del main_list[0:3]
-                        del rare_list[0]
-                else:
-                    for _ in range(2):
-                        tmp_list = main_list[0:3]
-                        tmp_list.append(extra_list[0])
-                        packs_list.append(tmp_list)
-                        del main_list[0:3]
-                        del extra_list[0]
+        for p in range(3*member_num):
+            apack = monster_list[10*p:10*(p+1)] + magic_list[3*p:3*(p+1)] + trap_list[3*p:3*(p+1)]+extra_list[3*p:3*(p+1)]
+            apack.append(rare_list[p])
+            packs_list.append(apack)
+
         return packs_list
 
     def create_deck(self, deck_name):
@@ -129,11 +124,10 @@ class Drafter():
         deck_format(deck_dict, self.deck_dir, deck_name)
 
 
-###d
-# deck_dict = {"main":list(id),"extra":list(id)}
-###
 def deck_format(deck_dict, deck_dir, deck_name):
-    # print(deck_dict)
+    """
+    deck_dict = {"main":list(id),"extra":list(id)}
+    """
     os.makedirs(deck_dir, exist_ok=True)
     with open(os.path.join(deck_dir, deck_name + ".ydk"), mode="w", encoding="utf-8") as f:
         f.write("#created by ...\n")

@@ -1,14 +1,14 @@
-#from draft_deck.drafter import Drafter
-from tkinter import StringVar, ttk,N,S,W,E
+from tkinter import StringVar, ttk, N, S, W, E
 
-class Name_form_frame(ttk.Frame):
-    def __init__(self,master,drafter):
+
+class NameFormFrame(ttk.Frame):
+    def __init__(self, master, drafter):
         super().__init__(master)
         self.drafter = drafter
-        self.text = ttk.Label(self,text = "Please fill in deck name:").grid(column=0,row=0)
+        self.text = ttk.Label(self, text="Please fill in deck name:").grid(column=0, row=0)
         self.name_value = StringVar()
-        self.name_form = ttk.Entry(self,textvariable=self.name_value).grid(column=0,row=1)
-        self.butotn = ttk.Button(self,text="OK",command=self.create_deck).grid(column=0,row=2)
+        self.name_form = ttk.Entry(self, textvariable=self.name_value).grid(column=0, row=1)
+        self.button = ttk.Button(self, text="OK", command=self.create_deck).grid(column=0, row=2)
 
     def create_deck(self):
         deck_name = self.name_value.get()
@@ -19,96 +19,107 @@ class Name_form_frame(ttk.Frame):
             self.master.destroy()
 
 
-class Card_Label(ttk.Label):
+class CardLabel(ttk.Label):
     ''' ttk.Label for Card img. This have id and fuction fired by left click.'''
-    def __init__(self,master,bind_func,**arg):
-        super().__init__(master,**arg)
-        self.id = 0
-        self.bind("<ButtonPress-1>",lambda e:bind_func(self.id))
 
-class Pack_display_frame(ttk.Frame):
-    def __init__(self,master,detail_controller):
+    def __init__(self, master, left_callback, right_callback, idx, id, **arg):
+        super().__init__(master, **arg)
+        self.idx = idx
+        self.id = id
+        self.bind("<ButtonPress-1>", lambda e: left_callback(self.idx))
+        self.bind("<ButtonPress-3>", lambda e: right_callback(self.id))
+
+
+class PackDisplayFrame(ttk.Frame):
+    def __init__(self, master, detail_callback):
         super().__init__(master)
         self.image_list = list()
         self.id_list = list()
         self.card_label_list = list()
-        self.detail_controller = detail_controller
+        self.detail_callback = detail_callback
+        self.selected_id = None
+        self.card_per_line = 5 # const parameter
 
     def set_card_image(self, image_list, id_list):
         self.image_list = image_list
         self.id_list = id_list
+
+        # destroy old label
         for card_label in self.card_label_list:
             card_label.destroy()
-        self.card_label_list = list() # reset list
-        #print(image_list)
-        for i,aimage in enumerate(self.image_list):
-            new_label = Card_Label(self,self.detail_controller.update_card_display,image=aimage)
-            new_label.grid(column=i,row=0)
-            new_label.columnconfigure(0,weight=1)
-            new_label.rowconfigure(0,weight = 1)
-            new_label.id = self.id_list[i]
+        self.card_label_list = list()  # reset list
+        # create new label
+        for idx, (id, img) in enumerate(zip(self.id_list, self.image_list)):
+            new_label = CardLabel(self, right_callback=self.detail_callback, idx=idx, id=id, image=img)
+            new_label.grid(column=idx % self.card_per_line, row=int(idx/self.card_per_line))
+            new_label.columnconfigure(0, weight=1)
+            new_label.rowconfigure(0, weight=1)
             self.card_label_list.append(new_label)
 
-class Card_choice_frame(ttk.Frame):
-    def __init__(self, master,drafter,detail_controller):
+    def choice_card(self, selected_idx):
+        # change label color
+        for idx, card_label in enumerate(self.card_label_list):
+            if idx == selected_idx:
+                card_label[idx].configure(bg="gray")
+            else:
+                card_label[idx].configure(bg="#f2f2f2")  # default?
+
+        self.selected_id = self.id_list[selected_idx]
+
+
+class CardChoiceFrame(ttk.Frame):
+    def __init__(self, master, drafter, card_callback, reload_callback, pick_callback):
         super().__init__(master)
         self.drafter = drafter
-        self.cards_id_upper = list()
-        self.cards_id_lower = list()
-        self.detail_controller = detail_controller
+        self.cards_id = list()
+        self.card_callback = card_callback
+        self.reload_callback = reload_callback
+        self.pick_callback = pick_callback
+        # reload button
+        self.reload_button = ttk.Button(self, text="reload", command=reload_callback)
+        self.reload_button.grid(column=0, row=0)
         # pack progress label
         self.pack_progress = StringVar()
         self.pack_cnt = 1
-        self.pack_progress.set(str(self.pack_cnt)+" / 15 pack")
-        self.pack_cnt_label = ttk.Label(self,textvariable=self.pack_progress)
-        self.pack_cnt_label.grid(column=0,row=0,columnspan=5)
-        # pack choice radio buttons
-        self.which_pack = StringVar()
-        self.upper_radio_button = ttk.Radiobutton(self,variable=self.which_pack,value="upper")
-        self.lower_radio_button = ttk.Radiobutton(self,variable=self.which_pack,value="under")
-        self.upper_radio_button.grid(column=0,row=1)
-        self.lower_radio_button.grid(column=0,row=2)
-
+        self.pack_progress.set(str(self.pack_cnt) + " / 6 pack")
+        self.pack_cnt_label = ttk.Label(self, textvariable=self.pack_progress)
+        self.pack_cnt_label.grid(column=1, row=0)
+        # pick player label
+        self.pick_player = StringVar()
+        self.pick_player_frame = ttk.Label(self, textvariable=self.pick_player)
+        self.pick_player_frame.grid(column=0, row=1)
         # pack display frame
-        self.pack_display_frame_upper = Pack_display_frame(self,self.detail_controller)
-        self.pack_display_frame_upper.grid(column=1,row=1)
-        self.pack_display_frame_upper.columnconfigure(0,weight=1)
-        self.pack_display_frame_upper.rowconfigure(0,weight=1)
-
-        self.pack_display_frame_lower = Pack_display_frame(self,self.detail_controller)
-        self.pack_display_frame_lower.grid(column=1,row=2)
-        self.pack_display_frame_lower.columnconfigure(0,weight=1)
-        self.pack_display_frame_lower.rowconfigure(0,weight=1)
+        self.pack_display_frame = PackDisplayFrame(self, self.card_callback)
+        self.pack_display_frame.grid(column=0, row=2)
+        self.pack_display_frame.columnconfigure(0, weight=1)
+        self.pack_display_frame.rowconfigure(0, weight=1)
 
         new_pack_img_list = self.drafter.get_new_pack_img(self.pack_cnt)
         new_pack_id_list = self.drafter.get_new_pack_id(self.pack_cnt)
-        #print(self.drafter,self.pack_cnt,new_pack_id_list)
-        #print(new_pack_img_list)
-        self.set_pack_img(new_pack_img_list,new_pack_id_list)
+        self.set_pack_img(new_pack_img_list, new_pack_id_list)
         # decide button
-        self.pack_choice_button = ttk.Button(self,text = "OK",command=lambda :self.decide_pack())
-        self.pack_choice_button.grid(column=0,row=3)
+        self.pack_choice_button = ttk.Button(self, text="OK", command=lambda: self.decide_card())
+        self.pack_choice_button.grid(column=0, row=3)
 
-    def set_pack_img(self,pack_img_list,pack_id_list):
-        self.cards_id_upper = pack_id_list[0]
-        self.cards_id_lower = pack_id_list[1]
-        self.pack_display_frame_upper.set_card_image(pack_img_list[0],self.cards_id_upper)
-        self.pack_display_frame_lower.set_card_image(pack_img_list[1],self.cards_id_lower)
+    def set_pack_img(self, pack_img_list, pack_id_list):
+        self.cards_id = pack_id_list
+        self.pack_display_frame.set_card_image(pack_img_list, self.cards_id)
 
-    def decide_pack(self):
-        if self.which_pack.get() == "upper":
-            self.drafter.add_deck(self.cards_id_upper)
-        else :
-            self.drafter.add_deck(self.cards_id_lower)
-        if self.pack_cnt == 15:
+    def decide_card(self):
+        # not selected
+        if self.pack_display_frame.selected_id is None:
+            return
+
+        pack_idx, player_list, id_list, img_list = self.drafter.pick_card(self.pack_display_frame.selected_id)
+        self.pack_display_frame.selected_id = None
+
+        if pack_idx == -1:
             self.pack_progress.set("deck creating...")
-            name_form = Name_form_frame(self.master,self.drafter)
-            name_form.grid(column=0,row=0,sticky=(N,S,W,E))
-            
+            name_form = NameFormFrame(self.master, self.drafter)
+            name_form.grid(column=0, row=0, sticky=(N, S, W, E))
         else:
-            self.pack_cnt += 1
-            new_pack_img_list = self.drafter.get_new_pack_img(self.pack_cnt)
-            new_pack_id_list = self.drafter.get_new_pack_id(self.pack_cnt)
-            self.set_pack_img(new_pack_img_list,new_pack_id_list)
-            self.pack_progress.set(str(self.pack_cnt)+" / 15 pack")
+            self.pack_cnt = pack_idx + 1
+            self.pack_progress.set(str(self.pack_cnt) + " / 6 pack")
+            self.pick_player.set(player_list)
+            self.set_pack_img(img_list, id_list)
 

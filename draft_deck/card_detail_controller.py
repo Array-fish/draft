@@ -1,4 +1,4 @@
-class Card_detail_controller():
+class Card_detail_controller:
     def __init__(self,drafter,card_detail_frame):
         self.drafter = drafter
         self.card_detail_frame = card_detail_frame

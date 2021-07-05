@@ -32,3 +32,47 @@ http://frontscape.seesaa.net/article/445095313.html?seesaa_related=category
 https://twitter.com/tokyo_yugioh_cs/status/881407321124950016
 拾い物いくつかある
 http://lambdadraft.blog.fc2.com/blog-entry-4.html
+
+## サーバー関連
+
+### サーバーが持っているデータ
+
+- 部屋のidとkey
+- 部屋の状態　人数集め中かピック中、終わり
+- プレイヤー人数、名前
+- 全てのパックのカードid
+- 今のターンプレイヤー
+- プレイヤーのピック順
+- 現在何パック目か
+
+### サーバーがするべき処理
+
+- 部屋の作成
+POST /create_room/
+value: room_key, pack_ids, player_num
+response: room_id, player_id
+
+- 部屋の有無の確認
+GET /check_room/<int:room_id>/
+response: entry_waiting or working or no_room
+
+- 部屋に入る
+POST /enter_room/<int:room_id>/
+value: key, player_name
+response: key is ok or not
+    if key is ok, return player_id and pack_id and turn_player
+設定された人数に達した場合には変化する。
+
+- 部屋の状態を確認して必要な情報をもらう
+POST /check_room/<int:room_id>/<int:player_id>/
+value: key
+response: check key and return pack_id and turn_player and player_order
+
+- 選んだカードを知らせる
+POST /pick_card/<int:room_id>/<int:player_id>/
+value: key, card_id
+response: return if it is accepted? and pack_id and turn_player and player_order
+最後のカードなら部屋を壊す。
+
+
+
