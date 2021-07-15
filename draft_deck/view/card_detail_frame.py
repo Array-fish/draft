@@ -2,8 +2,8 @@ from tkinter import StringVar, ttk, N, S, E, W
 
 
 class CardDetailFrame(ttk.Frame):
-    def __init__(self, master, drafter):
-        super().__init__(master)
+    def __init__(self, master, drafter, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
         # variable
         self.display_img = 0
         self.card_detail = StringVar()

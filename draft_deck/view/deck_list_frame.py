@@ -20,10 +20,9 @@ class DeckListFrame(ttk.Frame):
         self.deck_scrollbar = ttk.Scrollbar(self, orient=VERTICAL, command=self.deck_list_box.yview)
         self.deck_scrollbar.grid(column=1, row=0, sticky=(N, S))
         self.deck_list_box["yscrollcommand"] = self.deck_scrollbar.set
-        self.register_cards_var()
 
-    def register_cards_var(self):
-        self.drafter.set_cards_var(self.cards_var)
+    def set_cards_var(self, value):
+        self.cards_var.set(value)
 
     def show_detail(self):
         if self.cards_var.get() != "":

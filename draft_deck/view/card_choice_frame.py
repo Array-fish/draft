@@ -38,6 +38,7 @@ class PackDisplayFrame(ttk.Frame):
         self.card_label_list = list()
         self.detail_callback = detail_callback
         self.selected_id = None
+        self._prev_selected_idx = None
         self.card_per_line = 5 # const parameter
 
     def set_card_image(self, image_list, id_list):
@@ -50,33 +51,31 @@ class PackDisplayFrame(ttk.Frame):
         self.card_label_list = list()  # reset list
         # create new label
         for idx, (id, img) in enumerate(zip(self.id_list, self.image_list)):
-            new_label = CardLabel(self, right_callback=self.detail_callback, idx=idx, id=id, image=img)
-            new_label.grid(column=idx % self.card_per_line, row=int(idx/self.card_per_line))
+            new_label = CardLabel(self, right_callback=self.detail_callback, left_callback=self.choice_card, idx=idx, id=id, image=img,background="black")
+            new_label.grid(column=idx % self.card_per_line, row=int(idx/self.card_per_line),padx=3,pady=3)
             new_label.columnconfigure(0, weight=1)
             new_label.rowconfigure(0, weight=1)
             self.card_label_list.append(new_label)
 
     def choice_card(self, selected_idx):
         # change label color
-        for idx, card_label in enumerate(self.card_label_list):
-            if idx == selected_idx:
-                card_label[idx].configure(bg="gray")
-            else:
-                card_label[idx].configure(bg="#f2f2f2")  # default?
-
+        if self._prev_selected_idx is not None:
+            self.card_label_list[self._prev_selected_idx].configure(background="black")
+        self.card_label_list[selected_idx].configure(background="red")
+        self._prev_selected_idx = selected_idx
         self.selected_id = self.id_list[selected_idx]
 
 
 class CardChoiceFrame(ttk.Frame):
-    def __init__(self, master, drafter, card_callback, reload_callback, pick_callback):
+    def __init__(self, master, drafter, card_detail_controller, communication_controller):
         super().__init__(master)
         self.drafter = drafter
         self.cards_id = list()
-        self.card_callback = card_callback
-        self.reload_callback = reload_callback
-        self.pick_callback = pick_callback
+        self.card_detail_callback = card_detail_controller.update_card_display
+        self.communication_controller = communication_controller
+        self.selected_id = None
         # reload button
-        self.reload_button = ttk.Button(self, text="reload", command=reload_callback)
+        self.reload_button = ttk.Button(self, text="reload", command=self.reload_frame)
         self.reload_button.grid(column=0, row=0)
         # pack progress label
         self.pack_progress = StringVar()
@@ -89,17 +88,25 @@ class CardChoiceFrame(ttk.Frame):
         self.pick_player_frame = ttk.Label(self, textvariable=self.pick_player)
         self.pick_player_frame.grid(column=0, row=1)
         # pack display frame
-        self.pack_display_frame = PackDisplayFrame(self, self.card_callback)
+        self.pack_display_frame = PackDisplayFrame(self, self.card_detail_callback)
         self.pack_display_frame.grid(column=0, row=2)
         self.pack_display_frame.columnconfigure(0, weight=1)
         self.pack_display_frame.rowconfigure(0, weight=1)
-
-        new_pack_img_list = self.drafter.get_new_pack_img(self.pack_cnt)
-        new_pack_id_list = self.drafter.get_new_pack_id(self.pack_cnt)
-        self.set_pack_img(new_pack_img_list, new_pack_id_list)
+        self.card_detail_callback(10000)
         # decide button
-        self.pack_choice_button = ttk.Button(self, text="OK", command=lambda: self.decide_card())
+        self.pack_choice_button = ttk.Button(self, text="OK", command=self.decide_card)
         self.pack_choice_button.grid(column=0, row=3)
+        ## init function
+        self.reload_frame()
+        # init_pack_img_list = self.drafter.get_current_pack_img()
+        # init_pack_id_list = self.drafter.get_current_pack_id()
+        init_pack_img_list = self.drafter.get_test_pack_img()
+        init_pack_id_list = self.drafter.get_test_pack_id()
+        self.set_pack_img(init_pack_img_list, init_pack_id_list)
+        if self.communication_controller.is_my_turn():
+            self.pack_choice_button.state(["!disabled"])
+        else:
+            self.pack_choice_button.state(["disabled"])
 
     def set_pack_img(self, pack_img_list, pack_id_list):
         self.cards_id = pack_id_list
@@ -110,16 +117,32 @@ class CardChoiceFrame(ttk.Frame):
         if self.pack_display_frame.selected_id is None:
             return
 
-        pack_idx, player_list, id_list, img_list = self.drafter.pick_card(self.pack_display_frame.selected_id)
+        self.selected_id = self.pack_display_frame.selected_id
+        #print(self.selected_id)
         self.pack_display_frame.selected_id = None
 
-        if pack_idx == -1:
-            self.pack_progress.set("deck creating...")
-            name_form = NameFormFrame(self.master, self.drafter)
-            name_form.grid(column=0, row=0, sticky=(N, S, W, E))
+        self.communication_controller.pick_card(self.selected_id)
+        id_list = self.drafter.get_current_pack_id()
+        img_list = self.drafter.get_current_pack_img()
+        if len(id_list) == 0:
+            self.choice_frame.pack_progress.set("deck creating...")
+            self.create_name_form_frame()
         else:
-            self.pack_cnt = pack_idx + 1
             self.pack_progress.set(str(self.pack_cnt) + " / 6 pack")
-            self.pick_player.set(player_list)
+            self.pick_player.set(self.communication_controller.get_turn_player())
             self.set_pack_img(img_list, id_list)
+            if self.communication_controller.is_my_turn():
+                self.pack_choice_button.state(['!disabled'])
+            else:
+                self.pack_choice_button.state(['disabled'])
 
+    def reload_frame(self):
+        self.communication_controller.reload_pack()
+        self.pick_player.set(self.communication_controller.get_turn_player())
+        current_pack_img_list = self.drafter.get_current_pack_img()
+        current_pack_id_list = self.drafter.get_current_pack_id()
+        self.set_pack_img(current_pack_img_list, current_pack_id_list)
+        if self.communication_controller.is_my_turn():
+            self.pack_choice_button.state(["!disabled"])
+        else:
+            self.pack_choice_button.state(["disabled"])

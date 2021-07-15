@@ -1,38 +1,32 @@
 # main logic of card_draft
 import os
 import random
-from parse_card_data import parse_card_data, check_extra
+from draft_deck.model.parse_card_data import parse_card_data, check_extra
 import sqlite3
 import pandas as pd
 from PIL import ImageTk, Image
 
 
 class Drafter:
+    """
+    Draft deck and keep card, user choice.
+    manage Data Base and put images and texts.
+    """
     def __init__(self, img_dir, db_file, pool_file, deck_dir):
         self.deck = list()
-        self.deck_name = list()
+        self.deck_cards_names = list()
         self.img_dir = img_dir
         self.db_file = db_file
         self.pool_file = pool_file
         self.deck_dir = deck_dir
-        self.cards_var = 0
-        self.is_my_turn = False
-        self.packs = self.pack_create(self.read_card_pool())
+        self.packs = list()
+        self.current_pack_id_list = list()
         con = sqlite3.connect(db_file)
         cur = con.cursor()
         self.datas_df = pd.read_sql("SELECT * FROM datas", con)
         self.texts_df = pd.read_sql("SELECT * FROM texts", con)
         cur.close()
         con.close()
-
-    def create_room(self):
-        # post key to create_room
-        # get response get room id check player id
-        # post pack_id
-
-    def enter_room(self):
-        # post id and key to check can enter the room
-        # if there is not room, return error.
 
     def get_card_data(self, card_id):
         card_df = self.datas_df[self.datas_df["id"] == card_id]
@@ -48,45 +42,48 @@ class Drafter:
         img = ImageTk.PhotoImage(Image.open(os.path.join(self.img_dir, str(int(card_id))) + ".jpg").resize(img_size))
         return img
 
-    def extra_check(self, card_id):
+    def _extra_check(self, card_id):
         card_df = self.datas_df[self.datas_df["id"] == card_id]
         return check_extra(card_df)
 
-    def add_deck(self, card_id_list):
+    def add2deck(self, card_id_list):
         self.deck += card_id_list
         for id in card_id_list:
-            self.deck_name.append(self.get_card_data(id)["name"][0])
-        # change deck list
-        self.cards_var.set(self.deck_name)
+            self.deck_cards_names.append(self.get_card_data(id)["name"][0])
 
-    def set_cards_var(self, cards_var):
-        self.cards_var = cards_var
+    def set_current_pack_id(self, pack_id_list):
+        self.current_pack_id_list = pack_id_list
 
-    def get_new_pack_img(self, pack_cnt):
-        new_pack_id = self.get_new_pack_id(pack_cnt)
-        new_pack_img = list()
-        for pack_id in new_pack_id:
-            tmp_pack_img = list()
-            for id in pack_id:
-                tmp_pack_img.append(self.get_card_img(id))
-            new_pack_img.append(tmp_pack_img)
-        return new_pack_img
+    def get_current_pack_img(self):
+        pack_img_list = list()
+        for card_id in self.current_pack_id_list:
+            pack_img_list.append(self.get_card_img(card_id))
+        return pack_img_list
 
-    # pack_cnt is 1-index
-    def get_new_pack_id(self, pack_cnt):
-        new_pack_id = self.packs[(pack_cnt - 1) * 2:pack_cnt * 2]
-        return new_pack_id
+    def get_current_pack_id(self):
+        return self.current_pack_id_list
+
+    def get_test_pack_id(self):
+        return [89943723,89943723,89943723,78371393,64655485,89631139,83764718,23995346,84013237,44508094,99585850,
+                53582587,53129443,81439173,581014,5556499,37742478,68860936,28297833]
+
+    def get_test_pack_img(self):
+        pack_img_list = list()
+        for card_id in [89943723,89943723,89943723,78371393,64655485,89631139,83764718,23995346,84013237,44508094,99585850,
+                53582587,53129443,81439173,581014,5556499,37742478,68860936,28297833]:
+            pack_img_list.append(self.get_card_img(card_id, (118, 170)))
+        return pack_img_list
 
     def read_card_pool(self):
         pool_df = pd.read_csv(self.pool_file)
         card_pool_dict = dict()
-        type_list = ["monstar", "magic", "trap", "extra", "rare"]
+        type_list = ["monster", "magic", "trap", "extra", "rare"]
         for atype in type_list:
             type_df = pool_df[pool_df["type"] == atype]
             card_pool_dict[atype] = list()
             for i in range(len(type_df)):
-                card_num = type_df.iloc[i]["num"].values[0]
-                card_id = type_df.iloc[i]["id"].values[0]
+                card_num = type_df.iloc[i]["num"]
+                card_id = type_df.iloc[i]["id"]
                 for _ in range(card_num):
                     card_pool_dict[atype].append(card_id)
         return card_pool_dict
@@ -117,7 +114,7 @@ class Drafter:
     def create_deck(self, deck_name):
         deck_dict = {"main": list(), "extra": list()}
         for id in self.deck:
-            if self.extra_check(id):
+            if self._extra_check(id):
                 deck_dict["extra"].append(str(id))
             else:
                 deck_dict["main"].append(str(id))
